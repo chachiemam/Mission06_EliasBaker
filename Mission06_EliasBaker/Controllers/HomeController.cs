@@ -24,15 +24,76 @@ namespace Mission06_EliasBaker.Controllers
         [HttpGet]
         public IActionResult AddMovie()
         {
-            return View("Collection");
+            ViewBag.categories = _context.categories;
+            return View("Collection", new Collection());
         }
 
         [HttpPost]
         public IActionResult AddMovie(Collection response) 
         {
-            _context.movies.Add(response); //add record to DB
+            if (ModelState.IsValid)
+            {
+                _context.Movies.Add(response); //add record to DB
+                _context.SaveChanges();
+                return View("Confirmation", response);
+            }
+            else
+            {
+				ViewBag.categories = _context.categories;
+				return View("Collection",response);
+            }
+
+            
+        }
+
+        public IActionResult ReadData() //linq
+        {
+            var movies = _context.Movies
+                .Where(x => x.Rating != "R")
+                .OrderBy(x => x.Year).ToList();
+                
+                
+
+            return View(movies);
+        }
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var recordToEdit = _context.Movies
+                .Single(x => x.MovieId == id);
+            
+            ViewBag.categories = _context.categories;
+			
+			return View("Collection", recordToEdit);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Collection updatedInfo)
+        {
+            _context.Update(updatedInfo);
             _context.SaveChanges();
-            return View("Confirmation", response);
+            return RedirectToAction("ReadData");
+        }
+
+        [HttpGet]
+        public IActionResult Delete(int id)
+        {
+            var recordToDelete = _context.Movies
+                .Single(x => x.MovieId == id);
+
+            
+            
+            return View(recordToDelete);
+        }
+
+        [HttpPost]
+        public IActionResult Delete(Collection c)
+        {
+            _context.Movies.Remove(c);
+            _context.SaveChanges();
+
+            return RedirectToAction("ReadData");
         }
     }
 }
